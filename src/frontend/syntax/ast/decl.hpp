@@ -33,8 +33,8 @@ namespace compiler::frontend {
 
 	struct FnDeclNode {
 		IdentId name;
-		TypeNodeId ret_type;
 		ParamDeclList params;
+		TypeNodeId ret_type;
 		BlockNodeId body;
 	};
 

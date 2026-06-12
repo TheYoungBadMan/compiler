@@ -14,6 +14,7 @@
 namespace compiler {
 
 	enum class IdentId : Id {};
+	using IdentIdList = std::vector<IdentId>;
 
 	using Ident = std::string;
 	using IdentList = std::vector<Ident>;

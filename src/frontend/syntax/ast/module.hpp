@@ -31,11 +31,35 @@ namespace compiler::frontend {
 		[[nodiscard]] const TypeNode& type(TypeNodeId id) const { return types_.get(id); }
 		[[nodiscard]] const BlockNode& block(BlockNodeId id) const { return blocks_.get(id); }
 
-		DeclNodeId add_decl(DeclNode decl) { return decls_.add(std::move(decl)); }
-		StmtNodeId add_stmt(StmtNode stmt) { return stmts_.add(stmt); }
-		ExprNodeId add_expr(ExprNode expr) { return exprs_.add(std::move(expr)); }
-		TypeNodeId add_type(TypeNode type) { return types_.add(std::move(type)); }
-		BlockNodeId add_block(BlockNode block) { return blocks_.add(std::move(block)); }
+		DeclNodeId add_decl(DeclNode decl, SourceSpan span) {
+			auto id = decls_.add(std::move(decl));
+			decl_spans_.add(span);
+			return id;
+		}
+
+		StmtNodeId add_stmt(StmtNode stmt, SourceSpan span) {
+			auto id = stmts_.add(stmt);
+			stmt_spans_.add(span);
+			return id;
+		}
+
+		ExprNodeId add_expr(ExprNode expr, SourceSpan span) {
+			auto id = exprs_.add(std::move(expr));
+			expr_spans_.add(span);
+			return id;
+		}
+
+		TypeNodeId add_type(TypeNode type, SourceSpan span) {
+			auto id = types_.add(std::move(type));
+			type_spans_.add(span);
+			return id;
+		}
+
+		BlockNodeId add_block(BlockNode block, SourceSpan span) {
+			auto id = blocks_.add(std::move(block));
+			block_spans_.add(span);
+			return id;
+		}
 
 	private:
 		DeclNodeIdList global_decls_;

@@ -9,6 +9,7 @@
 #include "core/ident.hpp"
 #include "core/span.hpp"
 
+#include "frontend/syntax/ast/name.hpp"
 #include "frontend/syntax/ast/node_id.hpp"
 #include "frontend/syntax/literal/literal.hpp"
 #include "frontend/syntax/op/op.hpp"
@@ -64,12 +65,12 @@ namespace compiler::frontend {
 	using FieldInitList = std::vector<FieldInit>;
 
 	struct RecordExprNode {
-		TypeNodeId type;
+		Name name;
 		FieldInitList fields;
 	};
 
 	struct IdentExprNode {
-		IdentId name;
+		Name name;
 	};
 
 	struct LiteralExprNode {

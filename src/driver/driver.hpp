@@ -12,12 +12,10 @@
 #include "frontend/frontend.hpp"
 #include "frontend/lexer/error_dump.hpp"
 #include "frontend/syntax/token/token_dump.hpp"
+#include "frontend/syntax/ast/ast_dump.hpp"
 
 #include "driver/cli.hpp"
 #include "driver/reader.hpp"
-
-#include "frontend/syntax/token/token_dump.hpp"
-#include "frontend/frontend.hpp"
 
 namespace compiler::driver {
 
@@ -63,9 +61,9 @@ namespace compiler::driver {
 			std::print("{}", frontend::dump(result.tokens, source));
 		}
 
-		// if (opts->show_ast) {
-		// 	// print AST
-		// }
+		if (opts->show_ast) {
+			std::print("{}", frontend::dump(result.module, result.interner));
+		}
 
 		// if (opts->show_ir) {
 		// 	// print IR

@@ -11,7 +11,7 @@
 
 namespace compiler::frontend {
 
-	[[nodiscard]] inline std::string_view dump(BinaryOp op) noexcept {
+	[[nodiscard]] inline std::string_view to_string(BinaryOp op) noexcept {
 		switch (op) {
 			case BinaryOp::Add: return "+";
 			case BinaryOp::Sub: return "-";
@@ -36,7 +36,7 @@ namespace compiler::frontend {
 		debug_unreachable("invalid binary operator");
 	}
 
-	[[nodiscard]] inline std::string_view dump(UnaryOp op) noexcept {
+	[[nodiscard]] inline std::string_view to_string(UnaryOp op) noexcept {
 		switch (op) {
 			case UnaryOp::Pos: return "+";
 			case UnaryOp::Neg: return "-";
@@ -49,7 +49,7 @@ namespace compiler::frontend {
 		debug_unreachable("invalid unary operator");
 	}
 
-	[[nodiscard]] inline std::string_view dump(AssignOp op) noexcept {
+	[[nodiscard]] inline std::string_view to_string(AssignOp op) noexcept {
 		switch (op) {
 			case AssignOp::Assign: return "=";
 			case AssignOp::AddAssign: return "+=";

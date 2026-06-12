@@ -6,22 +6,26 @@
 #include <variant>
 #include <vector>
 
-#include "core/ident.hpp"
 #include "core/span.hpp"
 
+#include "frontend/syntax/ast/name.hpp"
 #include "frontend/syntax/ast/node_id.hpp"
 
 #include "support/pool.hpp"
 
 namespace compiler::frontend {
 
+	struct PointerTypeNode {
+		TypeNodeId pointee_type;
+	};
+
 	struct ArrayTypeNode {
 		TypeNodeId elem_type;
 		ExprNodeId size;
 	};
 
-	struct PointerTypeNode {
-		TypeNodeId pointee_type;
+	struct ParenTypeNode {
+		TypeNodeId inner_type;
 	};
 
 	struct FnTypeNode {
@@ -30,11 +34,12 @@ namespace compiler::frontend {
 	};
 
 	struct NamedTypeNode {
-		IdentId name;
+		Name name;
 	};
 
 	using TypeNode = std::variant<
-		ArrayTypeNode, PointerTypeNode, FnTypeNode, NamedTypeNode
+		PointerTypeNode, ArrayTypeNode,
+		ParenTypeNode, FnTypeNode, NamedTypeNode
 	>;
 
 	using TypeNodeList = std::vector<TypeNode>;

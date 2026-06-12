@@ -23,7 +23,7 @@ namespace compiler {
 			return data_[to_index(id)];
 		}
 
-		const T& get(IdType id) const noexcept {
+		[[nodiscard]] const T& get(IdType id) const noexcept {
 			return data_[to_index(id)];
 		}
 

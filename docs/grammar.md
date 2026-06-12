@@ -82,8 +82,9 @@ fn-decl = "fn" ident "(" param-list? ")" "->" type block ;
 param-list = param ("," param)* ","? ;
 param = "const"? ident ":" type ;
 
-record-decl = "record" ident "{" field* "}" ;
-field = ident ":" type ";" ;
+record-decl = "record" ident "{" field-list? "}" ;
+field-list = field ("," field)* ","? ;
+field = ident ":" type ;
 
 alias-decl = "alias" ident "=" type ";" ;
 
@@ -94,22 +95,15 @@ namespace-decl = "namespace" ident "{" decl* "}" ;
 
 ```ebnf
 stmt = decl-stmt
-     | expr-stmt
-     | assign-stmt
      | if-stmt
      | while-stmt
      | return-stmt
      | break-stmt
      | continue-stmt
-     | pass-stmt ;
+     | pass-stmt
+     | expr-or-assign-stmt ;
 
 decl-stmt = var-decl
-
-expr-stmt = expr ";" ;
-
-assign-stmt = expr assign-op expr ";" ;
-assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "%="
-            | "&=" | "|=" | "^=" | "<<=" | ">>=" ;
 
 if-stmt = "if" "(" expr ")" block ("else" block)? ;
 
@@ -122,6 +116,10 @@ break-stmt = "break" ";" ;
 continue-stmt = "continue" ";" ;
 
 pass-stmt = "pass" ";" ;
+
+expr-or-assign-stmt = expr ";" | expr assign-op expr ";" ;
+assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "%="
+            | "&=" | "|=" | "^=" | "<<=" | ">>=" ;
 ```
 
 ### Expressions
@@ -163,19 +161,17 @@ postfix-op = "(" expr-list? ")" | "[" expr "]" | "." ident | "as" type ;
 
 primary-expr = parenthesized-expr
              | array-expr
-             | record-expr
-             | ident-expr
+             | ident-or-record-expr
              | literal-expr ;
 
 parenthesized-expr = "(" expr ")" ;
 
-array-expr = "[" expr-list "]" ;
+array-expr = "[" expr-list? "]" ;
 
-record-expr = "{" field-init-list? "}" ;
+ident-or-record-expr = name | name "{" field-init-list? "}" ;
 field-init-list = field-init ("," field-init)* ","? ;
 field-init = ident "=" expr ;
 
-ident-expr = name ;
 
 literal-expr = integer
               | float
