@@ -66,15 +66,25 @@ namespace compiler::frontend {
 			result_.append(text);
 		}
 
-		void append_line(std::string_view text) {
-			indent();
-			result_.append(text);
-			newline();
+		void dump_labeled_expr(std::string_view label, ExprNodeId id) {
+			append_indented(label);
+			dump_expr(id, false);
+		}
+
+		void dump_labeled_type(std::string_view label, TypeNodeId id) {
+			append_indented(label);
+			dump_type(id, false);
+		}
+
+		void dump_labeled_block(std::string_view label, BlockNodeId id) {
+			append_indented(label);
+			dump_block(id);
 		}
 
 		// Dumping
 		void dump_module() {
-			append_line("Module:");
+			append("Module:\n");
+			IndentGuard guard(indent_level_);
 			for (auto decl : module_.global_decls()) {
 				dump_decl(decl);
 			}
@@ -189,6 +199,13 @@ namespace compiler::frontend {
 		void dump_block(BlockNodeId id) {
 			const auto& block = module_.block(id);
 			IndentGuard indent_guard(indent_level_);
+
+			if (block.stmts.empty()) {
+				append(" <empty>\n");
+				return;
+			}
+
+			newline();
 			for (auto stmt : block.stmts) {
 				dump_stmt(stmt);
 			}

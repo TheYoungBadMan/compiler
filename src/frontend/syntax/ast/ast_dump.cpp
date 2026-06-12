@@ -15,12 +15,10 @@ namespace compiler::frontend {
 		dump_ident(node.name);
 		newline();
 
-		IndentGuard indent_guard(indent_level_);
-		append_indented("type: ");
-		dump_type(node.type, false);
-		if (node.init.has_value()) {
-			append_indented("init: ");
-			dump_expr(node.init.value(), false);
+		IndentGuard guard(indent_level_);
+		dump_labeled_type("type: ", node.type);
+		if (node.init) {
+			dump_labeled_expr("init: ", *node.init);
 		}
 	}
 
@@ -29,19 +27,15 @@ namespace compiler::frontend {
 		dump_ident(node.name);
 		newline();
 
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		for (const auto& param : node.params) {
 			append_indented("param ");
 			dump_ident(param.name);
 			append(": ");
 			dump_type(param.type, false);
 		}
-
-		append_indented("ret: ");
-		dump_type(node.ret_type, false);
-
-		append_line("body:");
-		dump_block(node.body);
+		dump_labeled_type("ret: ", node.ret_type);
+		dump_labeled_block("body:", node.body);
 	}
 
 	void AstDumper::dump_record_decl(const RecordDeclNode& node) {
@@ -49,7 +43,7 @@ namespace compiler::frontend {
 		dump_ident(node.name);
 		newline();
 
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		for (const auto& field : node.fields) {
 			append_indented("field ");
 			dump_ident(field.name);
@@ -63,7 +57,7 @@ namespace compiler::frontend {
 		dump_ident(node.name);
 		newline();
 
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		dump_type(node.type);
 	}
 
@@ -72,7 +66,7 @@ namespace compiler::frontend {
 		dump_ident(node.name);
 		newline();
 
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		for (auto decl : node.decls) {
 			dump_decl(decl);
 		}
@@ -81,68 +75,57 @@ namespace compiler::frontend {
 	// Statements
 
 	void AstDumper::dump_decl_stmt(const DeclStmtNode& node) {
-		append_line("DeclStmt");
-		IndentGuard indent_guard(indent_level_);
+		append_indented("DeclStmt\n");
+		IndentGuard guard(indent_level_);
 		dump_decl(node.decl);
 	}
 
 	void AstDumper::dump_if_stmt(const IfStmtNode& node) {
-		append_line("IfStmt");
-		IndentGuard indent_guard(indent_level_);
-
-		append_indented("cond: ");
-		dump_expr(node.cond, false);
-
-		append_line("then:");
-		dump_block(node.then_body);
-
-		if (node.else_body.has_value()) {
-			append_line("else:");
-			dump_block(node.else_body.value());
+		append_indented("IfStmt\n");
+		IndentGuard guard(indent_level_);
+		dump_labeled_expr("cond: ", node.cond);
+		dump_labeled_block("then:", node.then_body);
+		if (node.else_body) {
+			dump_labeled_block("else:", *node.else_body);
 		}
 	}
 
 	void AstDumper::dump_while_stmt(const WhileStmtNode& node) {
-		append_line("WhileStmt");
-		IndentGuard indent_guard(indent_level_);
-
-		append_indented("cond: ");
-		dump_expr(node.cond, false);
-
-		append_line("body:");
-		dump_block(node.body);
+		append_indented("WhileStmt\n");
+		IndentGuard guard(indent_level_);
+		dump_labeled_expr("cond: ", node.cond);
+		dump_labeled_block("body:", node.body);
 	}
 
 	void AstDumper::dump_return_stmt(const ReturnStmtNode& node) {
-		append_line("ReturnStmt");
-		if (node.value.has_value()) {
-			IndentGuard indent_guard(indent_level_);
-			append_indented("value: ");
-			dump_expr(node.value.value(), false);
+		append_indented("ReturnStmt\n");
+		if (node.value) {
+			IndentGuard guard(indent_level_);
+			dump_labeled_expr("value: ", *node.value);
 		}
 	}
 
 	void AstDumper::dump_break_stmt([[maybe_unused]] const BreakStmtNode& node) {
-		append_line("BreakStmt");
+		append_indented("BreakStmt\n");
 	}
 
 	void AstDumper::dump_continue_stmt([[maybe_unused]] const ContinueStmtNode& node) {
-		append_line("ContinueStmt");
+		append_indented("ContinueStmt\n");
 	}
 
 	void AstDumper::dump_pass_stmt([[maybe_unused]] const PassStmtNode& node) {
-		append_line("PassStmt");
+		append_indented("PassStmt\n");
 	}
 
 	void AstDumper::dump_expr_stmt(const ExprStmtNode& node) {
-		append_line("ExprStmt");
-		IndentGuard indent_guard(indent_level_);
+		append_indented("ExprStmt\n");
+		IndentGuard guard(indent_level_);
 		dump_expr(node.expr);
 	}
 
 	void AstDumper::dump_assign_stmt(const AssignStmtNode& node) {
-		append_line(std::format("AssignStmt [{}]", to_string(node.op)));
-		IndentGuard indent_guard(indent_level_);
+		append_indented(std::format("AssignStmt [{}]\n", to_string(node.op)));
+		IndentGuard guard(indent_level_);
 		dump_expr(node.lhs);
 		dump_expr(node.rhs);
 	}
@@ -151,20 +134,20 @@ namespace compiler::frontend {
 
 	void AstDumper::dump_binary_expr(const BinaryExprNode& node) {
 		append(std::format("BinaryExpr [{}]\n", to_string(node.op)));
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		dump_expr(node.lhs);
 		dump_expr(node.rhs);
 	}
 
 	void AstDumper::dump_unary_expr(const UnaryExprNode& node) {
 		append(std::format("UnaryExpr [{}]\n", to_string(node.op)));
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		dump_expr(node.base);
 	}
 
 	void AstDumper::dump_call_expr(const CallExprNode& node) {
 		append("CallExpr\n");
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		dump_expr(node.callee);
 		for (auto arg : node.args) {
 			dump_expr(arg);
@@ -173,7 +156,7 @@ namespace compiler::frontend {
 
 	void AstDumper::dump_index_expr(const IndexExprNode& node) {
 		append("IndexExpr\n");
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		dump_expr(node.base);
 		dump_expr(node.index);
 	}
@@ -181,27 +164,27 @@ namespace compiler::frontend {
 	void AstDumper::dump_access_expr(const AccessExprNode& node) {
 		append("AccessExpr ");
 		dump_ident(node.member);
-		append("\n");
-		IndentGuard indent_guard(indent_level_);
+		newline();
+		IndentGuard guard(indent_level_);
 		dump_expr(node.base);
 	}
 
 	void AstDumper::dump_cast_expr(const CastExprNode& node) {
 		append("CastExpr\n");
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		dump_expr(node.base);
 		dump_type(node.type);
 	}
 
 	void AstDumper::dump_paren_expr(const ParenExprNode& node) {
 		append("ParenExpr\n");
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		dump_expr(node.base);
 	}
 
 	void AstDumper::dump_array_expr(const ArrayExprNode& node) {
 		append("ArrayExpr\n");
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		for (auto elem : node.elems) {
 			dump_expr(elem);
 		}
@@ -216,8 +199,8 @@ namespace compiler::frontend {
 	void AstDumper::dump_record_expr(const RecordExprNode& node) {
 		append("RecordExpr ");
 		dump_name(node.name);
-		append("\n");
-		IndentGuard indent_guard(indent_level_);
+		newline();
+		IndentGuard guard(indent_level_);
 		for (const auto& field : node.fields) {
 			append_indented("\"");
 			dump_ident(field.name);
@@ -244,13 +227,11 @@ namespace compiler::frontend {
 			case IntBase::Dec: append("dec"); break;
 			case IntBase::Hex: append("hex"); break;
 		}
-
 		switch (literal.signedness) {
 			case Signedness::Signed: append(" signed"); break;
 			case Signedness::Unsigned: append(" unsigned"); break;
 			default: break;
 		}
-
 		newline();
 	}
 
@@ -274,35 +255,30 @@ namespace compiler::frontend {
 
 	void AstDumper::dump_pointer_type(const PointerTypeNode& node) {
 		append("PointerType\n");
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		dump_type(node.pointee_type);
 	}
 
 	void AstDumper::dump_array_type(const ArrayTypeNode& node) {
 		append("ArrayType\n");
-		IndentGuard indent_guard(indent_level_);
-		append_indented("size: ");
-		dump_expr(node.size, false);
+		IndentGuard guard(indent_level_);
+		dump_labeled_expr("size: ", node.size);
 		dump_type(node.elem_type);
 	}
 
 	void AstDumper::dump_paren_type(const ParenTypeNode& node) {
 		append("ParenType\n");
-		IndentGuard indent_guard(indent_level_);
+		IndentGuard guard(indent_level_);
 		dump_type(node.inner_type);
 	}
 
 	void AstDumper::dump_fn_type(const FnTypeNode& node) {
 		append("FnType\n");
-		IndentGuard indent_guard(indent_level_);
-
+		IndentGuard guard(indent_level_);
 		for (const auto& param : node.param_types) {
-			append_indented("param: ");
-			dump_type(param, false);
+			dump_labeled_type("param: ", param);
 		}
-
-		append_indented("ret: ");
-		dump_type(node.ret_type, false);
+		dump_labeled_type("ret: ", node.ret_type);
 	}
 
 	void AstDumper::dump_named_type(const NamedTypeNode& node) {
