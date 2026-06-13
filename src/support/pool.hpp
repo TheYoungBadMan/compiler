@@ -4,7 +4,7 @@
 #define COMPILER_SRC_SUPPORT_POOL_HPP
 
 #include <utility>
-#include <vector>
+#include <deque>
 
 #include "support/id.hpp"
 #include "support/primitives.hpp"
@@ -34,12 +34,8 @@ namespace compiler {
 			return id;
 		}
 
-		void reserve(usize capacity) {
-			data_.reserve(capacity);
-		}
-
 	private:
-		std::vector<T> data_;
+		std::deque<T> data_;
 
 		IdType next_id() noexcept {
 			return to_id<IdType>(data_.size());

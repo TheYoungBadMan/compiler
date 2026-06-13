@@ -19,17 +19,17 @@ namespace compiler::frontend {
 			return scopes_[id];
 		}
 
-		[[nodiscard]] const Scope& global() const noexcept {
-			return scopes_[global_];
+		[[nodiscard]] ScopeId global() const noexcept {
+			return global_;
 		}
 
 		ScopeId add(Scope scope) {
 			return scopes_.add(std::move(scope));
 		}
 
-		[[nodiscard]] std::optional<Symbol> lookup(ScopeId from, IdentId ident) const noexcept {
+		[[nodiscard]] std::optional<Symbol> lookup(IdentId ident, ScopeId from) const noexcept {
 			for (std::optional<ScopeId> current = from; current; current = parent(*current)) {
-				if (auto symbol = lookup_local(*current, ident)) {
+				if (auto symbol = lookup_local(ident, *current)) {
 					return symbol;
 				}
 			}
@@ -37,7 +37,7 @@ namespace compiler::frontend {
 			return std::nullopt;
 		}
 
-		bool declare(ScopeId scope, IdentId ident, Symbol symbol) {
+		bool declare(IdentId ident, Symbol symbol, ScopeId scope) {
 			return scopes_[scope].declare(ident, symbol);
 		}
 
@@ -49,7 +49,7 @@ namespace compiler::frontend {
 			return scopes_[id].parent();
 		}
 
-		[[nodiscard]] std::optional<Symbol> lookup_local(ScopeId id, IdentId ident) const noexcept {
+		[[nodiscard]] std::optional<Symbol> lookup_local(IdentId ident, ScopeId id) const noexcept {
 			return scopes_[id].lookup(ident);
 		}
 	};

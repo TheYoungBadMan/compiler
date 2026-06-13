@@ -8,8 +8,7 @@
 #include <vector>
 
 #include "support/id.hpp"
-#include "support/pool.hpp"
-#include "support/primitives.hpp"
+#include "support/interner.hpp"
 
 namespace compiler {
 
@@ -17,34 +16,21 @@ namespace compiler {
 	using IdentIdList = std::vector<IdentId>;
 
 	using Ident = std::string;
-	using IdentList = std::vector<Ident>;
-
-	using IdentMap = std::unordered_map<Ident, IdentId>;
+	using IdentView = std::string_view;
 
 	class IdentInterner {
 	public:
-
-		[[nodiscard]] usize size() const noexcept {
-			return pool_.size();
-		}
 
 		[[nodiscard]] const Ident& get(IdentId id) const noexcept {
 			return pool_[id];
 		}
 
-		IdentId intern(const Ident& ident) {
-			if (auto it = map_.find(ident); it != map_.end()) {
-				return it->second;
-			}
-
-			IdentId id = pool_.add(ident);
-			map_.emplace(ident, id);
-			return id;
+		IdentId intern(IdentView ident) {
+			return pool_.intern(Ident(ident));
 		}
 
 	private:
-		Pool<Ident, IdentId> pool_;
-		IdentMap map_;
+		Interner<Ident, IdentId> pool_;
 	};
 
 } // namespace compiler

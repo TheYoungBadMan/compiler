@@ -32,10 +32,6 @@ namespace compiler {
 			return id;
 		}
 
-		void reserve(usize capacity) {
-			pool_.reserve(capacity);
-		}
-
 	private:
 		Pool<T, IdType> pool_;
 		std::unordered_map<T, IdType, Hash> dedup_;
