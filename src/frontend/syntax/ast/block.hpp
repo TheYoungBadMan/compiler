@@ -19,8 +19,8 @@ namespace compiler::frontend {
 
 	using BlockNodeList = std::vector<BlockNode>;
 
-	using BlockNodePool = Pool<BlockNodeId, BlockNode>;
-	using BlockNodeSpanPool = Pool<BlockNodeId, SourceSpan>;
+	using BlockNodePool = Pool<BlockNode, BlockNodeId>;
+	using BlockNodeSpanPool = Pool<SourceSpan, BlockNodeId>;
 
 } // namespace compiler::frontend
 

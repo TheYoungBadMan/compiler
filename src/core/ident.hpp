@@ -29,7 +29,7 @@ namespace compiler {
 		}
 
 		[[nodiscard]] const Ident& get(IdentId id) const noexcept {
-			return pool_.get(id);
+			return pool_[id];
 		}
 
 		IdentId intern(const Ident& ident) {
@@ -43,7 +43,7 @@ namespace compiler {
 		}
 
 	private:
-		Pool<IdentId, Ident> pool_;
+		Pool<Ident, IdentId> pool_;
 		IdentMap map_;
 	};
 

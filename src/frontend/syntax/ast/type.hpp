@@ -44,8 +44,8 @@ namespace compiler::frontend {
 
 	using TypeNodeList = std::vector<TypeNode>;
 
-	using TypeNodePool = Pool<TypeNodeId, TypeNode>;
-	using TypeNodeSpanPool = Pool<TypeNodeId, SourceSpan>;
+	using TypeNodePool = Pool<TypeNode, TypeNodeId>;
+	using TypeNodeSpanPool = Pool<SourceSpan, TypeNodeId>;
 
 } // namespace compiler::frontend
 

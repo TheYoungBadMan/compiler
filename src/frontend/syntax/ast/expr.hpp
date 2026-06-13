@@ -85,8 +85,8 @@ namespace compiler::frontend {
 
 	using ExprNodeList = std::vector<ExprNode>;
 
-	using ExprNodePool = Pool<ExprNodeId, ExprNode>;
-	using ExprNodeSpanPool = Pool<ExprNodeId, SourceSpan>;
+	using ExprNodePool = Pool<ExprNode, ExprNodeId>;
+	using ExprNodeSpanPool = Pool<SourceSpan, ExprNodeId>;
 
 } // namespace compiler::frontend
 

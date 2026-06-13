@@ -66,8 +66,8 @@ namespace compiler::frontend {
 
 	using DeclNodeList = std::vector<DeclNode>;
 
-	using DeclNodePool = Pool<DeclNodeId, DeclNode>;
-	using DeclNodeSpanPool = Pool<DeclNodeId, SourceSpan>;
+	using DeclNodePool = Pool<DeclNode, DeclNodeId>;
+	using DeclNodeSpanPool = Pool<SourceSpan, DeclNodeId>;
 
 } // namespace compiler::frontend
 

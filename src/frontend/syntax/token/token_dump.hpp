@@ -19,7 +19,7 @@
 
 namespace compiler::frontend {
 
-	[[nodiscard]] inline std::string_view dump(TokenKind kind) {
+	[[nodiscard]] inline std::string_view to_string(TokenKind kind) {
 		switch (kind) {
 			TOKEN_KIND(Ident)
 			TOKEN_KIND(Var)
@@ -93,13 +93,11 @@ namespace compiler::frontend {
 	}
 
 	[[nodiscard]] inline std::string dump(const Token& token, const Source& source) {
-		return std::format(
-			"{} `{}` at {} [{}]",
-			dump(token.kind),
+		return std::format("{} `{}` at {} [{}]",
+			to_string(token.kind),
 			source.slice(token.span),
 			source.loc(token.span.start),
-			token.span
-		);
+			token.span);
 	}
 
 	[[nodiscard]] inline std::string dump(const TokenList& tokens, const Source& source) {
@@ -113,13 +111,13 @@ namespace compiler::frontend {
 		usize loc_w = 0;
 
 		for (const auto& token : tokens) {
-			kind_w = std::max(kind_w, dump(token.kind).size());
+			kind_w = std::max(kind_w, to_string(token.kind).size());
 			lexeme_w = std::max(lexeme_w, source.slice(token.span).size() + 2);
 			loc_w = std::max(loc_w, std::format("{}", source.loc(token.span.start)).size());
 		}
 
 		for (const auto& token : tokens) {
-			auto kind = std::string(dump(token.kind));
+			auto kind = std::string(to_string(token.kind));
 			auto lexeme = std::format("`{}`", source.slice(token.span));
 			auto loc = std::format("{}", source.loc(token.span.start));
 
@@ -127,8 +125,7 @@ namespace compiler::frontend {
 			lexeme.resize(lexeme_w, ' ');
 			loc.resize(loc_w, ' ');
 
-			result += std::format("  {}  {}  at {}  [{}]\n",
-				kind, lexeme, loc, token.span);
+			result += std::format("  {}  {}  at {}  [{}]\n", kind, lexeme, loc, token.span);
 		}
 		return result;
 	}

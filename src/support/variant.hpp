@@ -10,8 +10,7 @@
 
 namespace compiler {
 
-	template <typename... Fs>
-	struct Overloaded : Fs... {
+	template <typename... Fs> struct Overloaded : Fs... {
 		using Fs::operator()...;
 	};
 
@@ -21,7 +20,8 @@ namespace compiler {
 	}
 
 	template <typename T, typename... Ts>
-	const T& expect_alt(const std::variant<Ts...>& variant, [[maybe_unused]] const char* msg) noexcept {
+	const T& expect_alt(const std::variant<Ts...>& variant,
+		[[maybe_unused]] const char* msg) noexcept {
 		debug_assert(std::holds_alternative<T>(variant), msg);
 		return std::get<T>(variant);
 	}

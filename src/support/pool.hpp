@@ -11,19 +11,20 @@
 
 namespace compiler {
 
-	template <typename IdType, typename T>
-	class Pool {
+	template <typename T, typename IdType> class Pool {
 	public:
 
 		[[nodiscard]] usize size() const noexcept {
 			return data_.size();
 		}
 
-		T& get(IdType id) noexcept {
+		T& operator[](IdType id) noexcept {
+			debug_assert(to_index(id) < data_.size(), "invalid id");
 			return data_[to_index(id)];
 		}
 
-		[[nodiscard]] const T& get(IdType id) const noexcept {
+		[[nodiscard]] const T& operator[](IdType id) const noexcept {
+			debug_assert(to_index(id) < data_.size(), "invalid id");
 			return data_[to_index(id)];
 		}
 
@@ -33,10 +34,14 @@ namespace compiler {
 			return id;
 		}
 
+		void reserve(usize capacity) {
+			data_.reserve(capacity);
+		}
+
 	private:
 		std::vector<T> data_;
 
-		constexpr IdType next_id() noexcept {
+		IdType next_id() noexcept {
 			return to_id<IdType>(data_.size());
 		}
 	};

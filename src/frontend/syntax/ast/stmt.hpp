@@ -57,8 +57,8 @@ namespace compiler::frontend {
 
 	using StmtNodeList = std::vector<StmtNode>;
 
-	using StmtNodePool = Pool<StmtNodeId, StmtNode>;
-	using StmtNodeSpanPool = Pool<StmtNodeId, SourceSpan>;
+	using StmtNodePool = Pool<StmtNode, StmtNodeId>;
+	using StmtNodeSpanPool = Pool<SourceSpan, StmtNodeId>;
 
 } // namespace compiler::frontend
 
