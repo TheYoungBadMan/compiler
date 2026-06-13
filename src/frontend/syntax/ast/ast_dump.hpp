@@ -3,8 +3,6 @@
 #ifndef COMPILER_SRC_FRONTEND_SYNTAX_AST_AST_DUMP_HPP
 #define COMPILER_SRC_FRONTEND_SYNTAX_AST_AST_DUMP_HPP
 
-#include "support/variant.hpp"
-
 #include "frontend/syntax/ast/module.hpp"
 
 namespace compiler::frontend {
@@ -18,20 +16,21 @@ namespace compiler::frontend {
 		}
 
 	private:
-		// State
+		// Input
 		const Module& module_;
 		const IdentInterner& interner_;
+
+		// State
 		u64 indent_level_ = 0;
 		std::string result_;
 
 		explicit AstDumper(const Module& module, const IdentInterner& interner) noexcept
 			: module_(module), interner_(interner) {}
 
-		// Helpers
+		// IndentGuard
 
 		class IndentGuard {
 		public:
-
 			explicit IndentGuard(u64& indent_level) noexcept : indent_level_(indent_level) {
 				indent_level_++;
 			}
@@ -48,6 +47,8 @@ namespace compiler::frontend {
 		private:
 			u64& indent_level_;
 		};
+
+		// Helpers
 
 		void indent() {
 			result_.append(indent_level_ * 2, ' ');
@@ -66,42 +67,18 @@ namespace compiler::frontend {
 			result_.append(text);
 		}
 
-		void dump_labeled_expr(std::string_view label, ExprNodeId id) {
-			append_indented(label);
-			dump_expr(id, false);
-		}
+		// Dispatchers
 
-		void dump_labeled_type(std::string_view label, TypeNodeId id) {
-			append_indented(label);
-			dump_type(id, false);
-		}
+		void dump_module();
+		void dump_decl(DeclNodeId id);
+		void dump_stmt(StmtNodeId id);
+		void dump_expr(ExprNodeId id, bool indented = true);
+		void dump_labeled_expr(std::string_view label, ExprNodeId id);
+		void dump_type(TypeNodeId id, bool indented = true);
+		void dump_labeled_type(std::string_view label, TypeNodeId id);
+		void dump_block(BlockNodeId id);
 
-		void dump_labeled_block(std::string_view label, BlockNodeId id) {
-			append_indented(label);
-			dump_block(id);
-		}
-
-		// Dumping
-		void dump_module() {
-			append("Module:\n");
-			IndentGuard guard(indent_level_);
-			for (auto decl : module_.global_decls()) {
-				dump_decl(decl);
-			}
-		}
-
-		void dump_decl(DeclNodeId id) {
-			const auto& decl = module_.decl(id);
-
-			match(
-				decl,
-				[&](const VarDeclNode& node) { dump_var_decl(node); },
-				[&](const FnDeclNode& node) { dump_fn_decl(node); },
-				[&](const RecordDeclNode& node) { dump_record_decl(node); },
-				[&](const AliasDeclNode& node) { dump_alias_decl(node); },
-				[&](const NamespaceDeclNode& node) { dump_namespace_decl(node); }
-			);
-		}
+		// Declarations
 
 		void dump_var_decl(const VarDeclNode& node);
 		void dump_fn_decl(const FnDeclNode& node);
@@ -109,22 +86,7 @@ namespace compiler::frontend {
 		void dump_alias_decl(const AliasDeclNode& node);
 		void dump_namespace_decl(const NamespaceDeclNode& node);
 
-		void dump_stmt(StmtNodeId id) {
-			const auto& stmt = module_.stmt(id);
-
-			match(
-				stmt,
-				[&](const DeclStmtNode& node) { dump_decl_stmt(node); },
-				[&](const IfStmtNode& node) { dump_if_stmt(node); },
-				[&](const WhileStmtNode& node) { dump_while_stmt(node); },
-				[&](const ReturnStmtNode& node) { dump_return_stmt(node); },
-				[&](const BreakStmtNode& node) { dump_break_stmt(node); },
-				[&](const ContinueStmtNode& node) { dump_continue_stmt(node); },
-				[&](const PassStmtNode& node) { dump_pass_stmt(node); },
-				[&](const ExprStmtNode& node) { dump_expr_stmt(node); },
-				[&](const AssignStmtNode& node) { dump_assign_stmt(node); }
-			);
-		}
+		// Statements
 
 		void dump_decl_stmt(const DeclStmtNode& node);
 		void dump_if_stmt(const IfStmtNode& node);
@@ -136,27 +98,7 @@ namespace compiler::frontend {
 		void dump_expr_stmt(const ExprStmtNode& node);
 		void dump_assign_stmt(const AssignStmtNode& node);
 
-		void dump_expr(ExprNodeId id, bool indented = true) {
-			if (indented) {
-				indent();
-			}
-
-			const auto& expr = module_.expr(id);
-			match(
-				expr,
-				[&](const BinaryExprNode& node) { dump_binary_expr(node); },
-				[&](const UnaryExprNode& node) { dump_unary_expr(node); },
-				[&](const CallExprNode& node) { dump_call_expr(node); },
-				[&](const IndexExprNode& node) { dump_index_expr(node); },
-				[&](const AccessExprNode& node) { dump_access_expr(node); },
-				[&](const CastExprNode& node) { dump_cast_expr(node); },
-				[&](const ParenExprNode& node) { dump_paren_expr(node); },
-				[&](const ArrayExprNode& node) { dump_array_expr(node); },
-				[&](const IdentExprNode& node) { dump_ident_expr(node); },
-				[&](const RecordExprNode& node) { dump_record_expr(node); },
-				[&](const LiteralExprNode& node) { dump_literal_expr(node); }
-			);
-		}
+		// Expressions
 
 		void dump_binary_expr(const BinaryExprNode& node);
 		void dump_unary_expr(const UnaryExprNode& node);
@@ -170,25 +112,7 @@ namespace compiler::frontend {
 		void dump_record_expr(const RecordExprNode& node);
 		void dump_literal_expr(const LiteralExprNode& node);
 
-		void dump_int_literal(IntLiteral literal);
-		void dump_float_literal(FloatLiteral literal);
-		void dump_bool_literal(BoolLiteral literal);
-
-		void dump_type(TypeNodeId id, bool indented = true) {
-			if (indented) {
-				indent();
-			}
-
-			const auto& type = module_.type(id);
-			match(
-				type,
-				[&](const PointerTypeNode& node) { dump_pointer_type(node); },
-				[&](const ArrayTypeNode& node) { dump_array_type(node); },
-				[&](const ParenTypeNode& node) { dump_paren_type(node); },
-				[&](const FnTypeNode& node) { dump_fn_type(node); },
-				[&](const NamedTypeNode& node) { dump_named_type(node); }
-			);
-		}
+		// Types
 
 		void dump_pointer_type(const PointerTypeNode& node);
 		void dump_array_type(const ArrayTypeNode& node);
@@ -196,32 +120,10 @@ namespace compiler::frontend {
 		void dump_fn_type(const FnTypeNode& node);
 		void dump_named_type(const NamedTypeNode& node);
 
-		void dump_block(BlockNodeId id) {
-			const auto& block = module_.block(id);
-			IndentGuard indent_guard(indent_level_);
+		// Ident/Name
 
-			if (block.stmts.empty()) {
-				append(" <empty>\n");
-				return;
-			}
-
-			newline();
-			for (auto stmt : block.stmts) {
-				dump_stmt(stmt);
-			}
-		}
-
-		void dump_ident(IdentId id) {
-			result_.append(std::format("'{}'", interner_.get(id)));
-		}
-
-		void dump_name(const Name& name) {
-			for (auto qualifier : name.qualifiers) {
-				dump_ident(qualifier);
-				append("::");
-			}
-			dump_ident(name.name);
-		}
+		void dump_ident(IdentId id);
+		void dump_name(const Name& name);
 	};
 
 	inline std::string dump(const Module& module, const IdentInterner& interner) {

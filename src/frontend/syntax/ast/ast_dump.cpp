@@ -2,15 +2,116 @@
 
 #include "frontend/syntax/ast/ast_dump.hpp"
 
-#include "frontend/syntax/literal/literal.hpp"
+#include "support/variant.hpp"
+
+#include "frontend/syntax/literal/literal_dump.hpp"
 #include "frontend/syntax/op/op_dump.hpp"
 
 namespace compiler::frontend {
 
+	// Dispatchers
+
+	void AstDumper::dump_module() {
+		append("Module:\n");
+		IndentGuard guard(indent_level_);
+		for (auto decl : module_.global_decls()) {
+			dump_decl(decl);
+		}
+	}
+
+	void AstDumper::dump_decl(DeclNodeId id) {
+		indent();
+		const auto& decl = module_.decl(id);
+		match(
+			decl,
+			[&](const VarDeclNode& node) { dump_var_decl(node); },
+			[&](const FnDeclNode& node) { dump_fn_decl(node); },
+			[&](const RecordDeclNode& node) { dump_record_decl(node); },
+			[&](const AliasDeclNode& node) { dump_alias_decl(node); },
+			[&](const NamespaceDeclNode& node) { dump_namespace_decl(node); }
+		);
+	}
+
+	void AstDumper::dump_stmt(StmtNodeId id) {
+		indent();
+		const auto& stmt = module_.stmt(id);
+		match(
+			stmt,
+			[&](const DeclStmtNode& node) { dump_decl_stmt(node); },
+			[&](const IfStmtNode& node) { dump_if_stmt(node); },
+			[&](const WhileStmtNode& node) { dump_while_stmt(node); },
+			[&](const ReturnStmtNode& node) { dump_return_stmt(node); },
+			[&](const BreakStmtNode& node) { dump_break_stmt(node); },
+			[&](const ContinueStmtNode& node) { dump_continue_stmt(node); },
+			[&](const PassStmtNode& node) { dump_pass_stmt(node); },
+			[&](const ExprStmtNode& node) { dump_expr_stmt(node); },
+			[&](const AssignStmtNode& node) { dump_assign_stmt(node); }
+		);
+	}
+
+	void AstDumper::dump_expr(ExprNodeId id, bool indented) {
+		if (indented) {
+			indent();
+		}
+		const auto& expr = module_.expr(id);
+		match(
+			expr,
+			[&](const BinaryExprNode& node) { dump_binary_expr(node); },
+			[&](const UnaryExprNode& node) { dump_unary_expr(node); },
+			[&](const CallExprNode& node) { dump_call_expr(node); },
+			[&](const IndexExprNode& node) { dump_index_expr(node); },
+			[&](const AccessExprNode& node) { dump_access_expr(node); },
+			[&](const CastExprNode& node) { dump_cast_expr(node); },
+			[&](const ParenExprNode& node) { dump_paren_expr(node); },
+			[&](const ArrayExprNode& node) { dump_array_expr(node); },
+			[&](const IdentExprNode& node) { dump_ident_expr(node); },
+			[&](const RecordExprNode& node) { dump_record_expr(node); },
+			[&](const LiteralExprNode& node) { dump_literal_expr(node); }
+		);
+	}
+
+	void AstDumper::dump_labeled_expr(std::string_view label, ExprNodeId id) {
+		append_indented(label);
+		dump_expr(id, false);
+	}
+
+	void AstDumper::dump_type(TypeNodeId id, bool indented) {
+		if (indented) {
+			indent();
+		}
+		const auto& type = module_.type(id);
+		match(
+			type,
+			[&](const PointerTypeNode& node) { dump_pointer_type(node); },
+			[&](const ArrayTypeNode& node) { dump_array_type(node); },
+			[&](const ParenTypeNode& node) { dump_paren_type(node); },
+			[&](const FnTypeNode& node) { dump_fn_type(node); },
+			[&](const NamedTypeNode& node) { dump_named_type(node); }
+		);
+	}
+
+	void AstDumper::dump_labeled_type(std::string_view label, TypeNodeId id) {
+		append_indented(label);
+		dump_type(id, false);
+	}
+
+	void AstDumper::dump_block(BlockNodeId id) {
+		const auto& block = module_.block(id);
+		if (block.stmts.empty()) {
+			append(" <empty>\n");
+			return;
+		}
+		newline();
+		IndentGuard guard(indent_level_);
+		for (auto stmt : block.stmts) {
+			dump_stmt(stmt);
+		}
+	}
+
 	// Declarations
 
 	void AstDumper::dump_var_decl(const VarDeclNode& node) {
-		append_indented("VarDecl ");
+		append("VarDecl ");
 		append(node.is_const ? "[const] " : "[var] ");
 		dump_ident(node.name);
 		newline();
@@ -23,29 +124,32 @@ namespace compiler::frontend {
 	}
 
 	void AstDumper::dump_fn_decl(const FnDeclNode& node) {
-		append_indented("FnDecl ");
+		append("FnDecl ");
 		dump_ident(node.name);
 		newline();
 
 		IndentGuard guard(indent_level_);
 		for (const auto& param : node.params) {
-			append_indented("param ");
+			indent();
+			append("param ");
 			dump_ident(param.name);
 			append(": ");
 			dump_type(param.type, false);
 		}
 		dump_labeled_type("ret: ", node.ret_type);
-		dump_labeled_block("body:", node.body);
+		append_indented("body:");
+		dump_block(node.body);
 	}
 
 	void AstDumper::dump_record_decl(const RecordDeclNode& node) {
-		append_indented("RecordDecl ");
+		append("RecordDecl ");
 		dump_ident(node.name);
 		newline();
 
 		IndentGuard guard(indent_level_);
 		for (const auto& field : node.fields) {
-			append_indented("field ");
+			indent();
+			append("field ");
 			dump_ident(field.name);
 			append(": ");
 			dump_type(field.type, false);
@@ -53,7 +157,7 @@ namespace compiler::frontend {
 	}
 
 	void AstDumper::dump_alias_decl(const AliasDeclNode& node) {
-		append_indented("AliasDecl ");
+		append("AliasDecl ");
 		dump_ident(node.name);
 		newline();
 
@@ -62,7 +166,7 @@ namespace compiler::frontend {
 	}
 
 	void AstDumper::dump_namespace_decl(const NamespaceDeclNode& node) {
-		append_indented("NamespaceDecl ");
+		append("NamespaceDecl ");
 		dump_ident(node.name);
 		newline();
 
@@ -75,30 +179,33 @@ namespace compiler::frontend {
 	// Statements
 
 	void AstDumper::dump_decl_stmt(const DeclStmtNode& node) {
-		append_indented("DeclStmt\n");
+		append("DeclStmt\n");
 		IndentGuard guard(indent_level_);
 		dump_decl(node.decl);
 	}
 
 	void AstDumper::dump_if_stmt(const IfStmtNode& node) {
-		append_indented("IfStmt\n");
+		append("IfStmt\n");
 		IndentGuard guard(indent_level_);
 		dump_labeled_expr("cond: ", node.cond);
-		dump_labeled_block("then:", node.then_body);
+		append_indented("then:");
+		dump_block(node.then_body);
 		if (node.else_body) {
-			dump_labeled_block("else:", *node.else_body);
+			append_indented("else:");
+			dump_block(*node.else_body);
 		}
 	}
 
 	void AstDumper::dump_while_stmt(const WhileStmtNode& node) {
-		append_indented("WhileStmt\n");
+		append("WhileStmt\n");
 		IndentGuard guard(indent_level_);
 		dump_labeled_expr("cond: ", node.cond);
-		dump_labeled_block("body:", node.body);
+		append_indented("body:");
+		dump_block(node.body);
 	}
 
 	void AstDumper::dump_return_stmt(const ReturnStmtNode& node) {
-		append_indented("ReturnStmt\n");
+		append("ReturnStmt\n");
 		if (node.value) {
 			IndentGuard guard(indent_level_);
 			dump_labeled_expr("value: ", *node.value);
@@ -106,25 +213,25 @@ namespace compiler::frontend {
 	}
 
 	void AstDumper::dump_break_stmt([[maybe_unused]] const BreakStmtNode& node) {
-		append_indented("BreakStmt\n");
+		append("BreakStmt\n");
 	}
 
 	void AstDumper::dump_continue_stmt([[maybe_unused]] const ContinueStmtNode& node) {
-		append_indented("ContinueStmt\n");
+		append("ContinueStmt\n");
 	}
 
 	void AstDumper::dump_pass_stmt([[maybe_unused]] const PassStmtNode& node) {
-		append_indented("PassStmt\n");
+		append("PassStmt\n");
 	}
 
 	void AstDumper::dump_expr_stmt(const ExprStmtNode& node) {
-		append_indented("ExprStmt\n");
+		append("ExprStmt\n");
 		IndentGuard guard(indent_level_);
 		dump_expr(node.expr);
 	}
 
 	void AstDumper::dump_assign_stmt(const AssignStmtNode& node) {
-		append_indented(std::format("AssignStmt [{}]\n", to_string(node.op)));
+		append(std::format("AssignStmt [{}]\n", to_string(node.op)));
 		IndentGuard guard(indent_level_);
 		dump_expr(node.lhs);
 		dump_expr(node.rhs);
@@ -202,9 +309,9 @@ namespace compiler::frontend {
 		newline();
 		IndentGuard guard(indent_level_);
 		for (const auto& field : node.fields) {
-			append_indented("\"");
+			indent();
 			dump_ident(field.name);
-			append("\": ");
+			append(": ");
 			dump_expr(field.init, false);
 		}
 	}
@@ -212,43 +319,23 @@ namespace compiler::frontend {
 	void AstDumper::dump_literal_expr(const LiteralExprNode& node) {
 		match(
 			node.value,
-			[&](IntLiteral literal) { dump_int_literal(literal); },
-			[&](FloatLiteral literal) { dump_float_literal(literal); },
-			[&](BoolLiteral literal) { dump_bool_literal(literal); },
+			[&](IntLiteral lit) {
+				append("IntLiteral ");
+				append(to_string(lit.base));
+				append(" ");
+				append(to_string(lit.signedness));
+				newline();
+			},
+			[&](FloatLiteral lit) {
+				append("FloatLiteral ");
+				append(to_string(lit.kind));
+				newline();
+			},
+			[&](BoolLiteral lit) {
+				append(lit.value ? "BoolLiteral true\n" : "BoolLiteral false\n");
+			},
 			[&](NullLiteral) { append("NullLiteral\n"); }
 		);
-	}
-
-	void AstDumper::dump_int_literal(IntLiteral literal) {
-		append("IntLiteral ");
-		switch (literal.base) {
-			case IntBase::Bin: append("bin"); break;
-			case IntBase::Oct: append("oct"); break;
-			case IntBase::Dec: append("dec"); break;
-			case IntBase::Hex: append("hex"); break;
-		}
-		switch (literal.signedness) {
-			case Signedness::Signed: append(" signed"); break;
-			case Signedness::Unsigned: append(" unsigned"); break;
-			default: break;
-		}
-		newline();
-	}
-
-	void AstDumper::dump_float_literal(FloatLiteral literal) {
-		append("FloatLiteral ");
-		switch (literal.kind) {
-			case FloatKind::Finite: append("finite"); break;
-			case FloatKind::Inf: append("inf"); break;
-			case FloatKind::NaN: append("nan"); break;
-		}
-		newline();
-	}
-
-	void AstDumper::dump_bool_literal(BoolLiteral literal) {
-		append("BoolLiteral ");
-		append(literal.value ? "true" : "false");
-		newline();
 	}
 
 	// Types
@@ -285,6 +372,22 @@ namespace compiler::frontend {
 		append("NamedType ");
 		dump_name(node.name);
 		newline();
+	}
+
+	// Utilities
+
+	void AstDumper::dump_ident(IdentId id) {
+		append("'");
+		append(interner_.get(id));
+		append("'");
+	}
+
+	void AstDumper::dump_name(const Name& name) {
+		for (auto qualifier : name.qualifiers) {
+			dump_ident(qualifier);
+			append("::");
+		}
+		dump_ident(name.name);
 	}
 
 } // namespace compiler::frontend
