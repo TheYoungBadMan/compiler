@@ -1,0 +1,10 @@
+fn main() -> int {
+	var x : int = 1;
+	const y : int = 2;
+
+	if (x < y) {
+		return y;
+	} else {
+		return x;
+	}
+}

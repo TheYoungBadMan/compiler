@@ -1,0 +1,20 @@
+record A {
+
+}
+
+namespace N {
+	record B {
+
+	}
+}
+
+fn f() -> int {
+
+}
+
+fn g() -> int {
+
+	if (true) {
+	} else {
+	}
+}

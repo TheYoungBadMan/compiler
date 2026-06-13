@@ -1,0 +1,6 @@
+fn main() -> int {
+	var x : int = 1 + 2 * 3 - 4 / 2;
+	var y : int = (x + 1) << 2;
+	var z : int = foo(bar(1, 2), arr[0], obj as int);
+	return x + y + z;
+}

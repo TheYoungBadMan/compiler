@@ -1,0 +1,5 @@
+alias Size = int;
+
+namespace math {
+	alias Count = Size;
+}
